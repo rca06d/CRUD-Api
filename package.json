@@ -6,8 +6,6 @@
     },
   "dependencies": {
     "express": "*",
-    "mongoose": "*",
-    "morgan": "*",
-    "body-parser": "*"
+    "mongoose": "*"
   }
 }
