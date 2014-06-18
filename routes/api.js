@@ -1,10 +1,11 @@
 var models = require("../models/models.js");
+var AudioClip = models.AudioClip;
 
 exports.createClip = function (request, response) {
 
-	console.log(request);
+	//console.log(request);
 
-	var newClip = new models.AudioClip({ 
+	var newClip = new AudioClip({ 
 		name: "New Clip",
 	    path: "/some/path/to/newclip.wav",
 	    length: 10.5,
@@ -26,13 +27,47 @@ exports.createClip = function (request, response) {
 
 };
 
-exports.getMoarStuff = function (request, response) {
-	response.writeHead(200);
-	response.write("Moaarrrrrrrrrrr");
-	response.end();
+exports.getClipById = function (request, response) {
+
+	var id = request.params.id;
+
+	AudioClip.find({_id: id}, function (err, clip) {
+	  if (err) {
+	  	response.writeHead(200);
+		response.write("Something went wrong. Err: " + err);
+	  } else {
+	  	response.writeHead(200);
+		response.write(JSON.stringify(clip));
+	  }
+	  response.end();
+	})
 };
 
-exports.postStuff = function (request, response) {
-	response.writeHead(200);
-	response.pipe(request);
+exports.getClipByName = function (request, response) {
+
+	var name = request.params.name;
+
+	AudioClip.find({name: name}, function (err, clip) {
+	  if (err) {
+	  	response.writeHead(200);
+		response.write("Something went wrong. Err: " + err);
+	  } else {
+	  	response.writeHead(200);
+		response.write(JSON.stringify(clip));
+	  }
+	  response.end();
+	})
+};
+
+exports.getAllClips = function (request, response) {
+	AudioClip.find(function (err, clips) {
+	  if (err) {
+	  	response.writeHead(200);
+		response.write("Something went wrong. Err: " + err);
+	  } else {
+	  	response.writeHead(200);
+		response.write(JSON.stringify(clips));
+	  }
+	  response.end();
+	})
 };
