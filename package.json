@@ -1,11 +1,11 @@
 {
   "name": "CRUD-Api",
   "version": "0.0.1",
-  "scripts": {
-        "start": "node ./init"
-    },
+  "main": "server.js",
   "dependencies": {
     "express": "*",
-    "mongoose": "*"
+    "mongoose": "*",
+    "connect-busboy": "*",
+    "method-override": "*"
   }
 }
