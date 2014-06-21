@@ -2,6 +2,51 @@ var fs = require("fs");
 var models = require("../models/models.js");
 var AudioClip = models.AudioClip;
 
+exports.getClipById = function (request, response) {
+
+	var id = request.params.id;
+
+	AudioClip.find({_id: id}, function (err, clip) {
+	  if (err) {
+	  	response.writeHead(200);
+		response.write("Something went wrong. Err: " + err);
+	  } else {
+	  	response.writeHead(200);
+		response.write(JSON.stringify(clip));
+	  }
+	  response.end();
+	})
+};
+
+exports.getClipByName = function (request, response) {
+
+	var name = request.params.name;
+
+	AudioClip.find({name: name}, function (err, clip) {
+	  if (err) {
+	  	response.writeHead(200);
+		response.write("Something went wrong. Err: " + err);
+	  } else {
+	  	response.writeHead(200);
+		response.write(JSON.stringify(clip));
+	  }
+	  response.end();
+	})
+};
+
+exports.getAllClips = function (request, response) {
+	AudioClip.find(function (err, clips) {
+	  if (err) {
+	  	response.writeHead(200);
+		response.write("Something went wrong. Err: " + err);
+	  } else {
+	  	response.writeHead(200);
+		response.write(JSON.stringify(clips));
+	  }
+	  response.end();
+	})
+};
+
 exports.uploadClip = function (request, response) {
 
 	if (request.method === "POST" && request.url === "/api/uploadclip") {
@@ -61,53 +106,94 @@ exports.uploadClip = function (request, response) {
 
         request.pipe(request.busboy);
 
-    } else if (request.method === "POST" && request.url === "/api/updateclip") {
-    	
     }
 
 };
 
-exports.getClipById = function (request, response) {
+exports.updateClip = function (request, response) {
+
+	var body = "";
+    // we want to get the data as utf8 strings
+    // If you don't set an encoding, then you'll get Buffer objects
+    request.setEncoding('utf8');
+
+    // Readable streams emit 'data' events once a listener is added
+    request.on('data', function (chunk) {
+        body += chunk;
+    });
+
+    // the end event tells you that you have entire body
+    request.on('end', function () {
+
+        try {
+
+        	var id = request.params.id;
+
+            body = JSON.parse(body);
+
+            AudioClip.update({_id: id}, { $set: body }, function (err, clip) {
+
+				if (err) {
+					response.writeHead(200);
+					response.write("Something went wrong. Err: " + err);
+				} else {
+					response.writeHead(200);
+					response.write(JSON.stringify(clip));
+				} // end if
+
+				response.end();
+			}); // end update
+
+        } catch (er) {
+
+            // uh oh!  bad json!
+            response.statusCode = 400;
+            return response.end('error: ' + er.message);
+
+        } // end try catch
+
+    }); // end request end
+
+};
+
+exports.deleteClip = function (request, response) {
 
 	var id = request.params.id;
 
-	AudioClip.find({_id: id}, function (err, clip) {
-	  if (err) {
-	  	response.writeHead(200);
-		response.write("Something went wrong. Err: " + err);
-	  } else {
-	  	response.writeHead(200);
-		response.write(JSON.stringify(clip));
-	  }
-	  response.end();
-	})
-};
+	AudioClip.findOne({_id: id}, function (err, clip) {
 
-exports.getClipByName = function (request, response) {
+		if (err) {
 
-	var name = request.params.name;
+			response.writeHead(200);
+			response.write("Something went wrong. Err: " + err);
+			response.end();
 
-	AudioClip.find({name: name}, function (err, clip) {
-	  if (err) {
-	  	response.writeHead(200);
-		response.write("Something went wrong. Err: " + err);
-	  } else {
-	  	response.writeHead(200);
-		response.write(JSON.stringify(clip));
-	  }
-	  response.end();
-	})
-};
+		} else {
 
-exports.getAllClips = function (request, response) {
-	AudioClip.find(function (err, clips) {
-	  if (err) {
-	  	response.writeHead(200);
-		response.write("Something went wrong. Err: " + err);
-	  } else {
-	  	response.writeHead(200);
-		response.write(JSON.stringify(clips));
-	  }
-	  response.end();
-	})
-};
+			fs.unlink(clip.serverPath, function() {
+
+				AudioClip.remove({_id: id}, function (err, result) {
+
+					if (err) {
+
+						response.writeHead(200);
+						response.write("Something went wrong. Err: " + err);
+
+					} else {
+
+						response.writeHead(200);
+						response.write(JSON.stringify(result));
+
+					} // end remove if
+
+					response.end();
+
+				}); // end mongoose remove
+
+			}); // end unlink
+
+		} // end find if
+		
+	}); // end mongoose find
+	
+}; // end deleteClip

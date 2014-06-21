@@ -30,10 +30,12 @@ app.use(busboy());
 app.use(methodOverride()); // Simulate DELETE and PUT
 
 // Routes
-app.post("/api/uploadclip", api.uploadClip);
 app.get("/api/getclipbyid/:id", api.getClipById);
 app.get("/api/getclipbyname/:name", api.getClipByName);
 app.get("/api/getallclips", api.getAllClips);
+app.post("/api/uploadclip", api.uploadClip);
+app.put("/api/updateclip/:id", api.updateClip);
+app.delete("/api/deleteclip/:id", api.deleteClip);
 
 var server = app.listen(3001, function() { 
 	console.log("Here's my number: %d, call me maybe?", server.address().port);
