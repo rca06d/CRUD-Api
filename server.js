@@ -34,7 +34,7 @@ app.get("/api/getclipbyid/:id", api.getClipById);
 app.get("/api/getclipbyname/:name", api.getClipByName);
 app.get("/api/getallclips", api.getAllClips);
 app.post("/api/uploadclip", api.uploadClip);
-app.put("/api/updateclip/:id", api.updateClip);
+app.put("/api/updateclip", api.updateClip);
 app.delete("/api/deleteclip/:id", api.deleteClip);
 
 var server = app.listen(3001, function() { 
