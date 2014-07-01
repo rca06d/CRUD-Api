@@ -37,6 +37,10 @@ function getMimeType(filename) {
     }
 }
 
+function writeStreamErr() {
+	console.log("There was an error writing to the stream.");
+}
+
 exports.getClipById = function (request, response) {
 
 	var id = request.params.id;
@@ -97,18 +101,24 @@ exports.uploadClip = function (request, response) {
         // see if the clip is in mongo already
         AudioClip.findOne({serverPath: serverPath}, function (err, clip) {
 		  	if (clip) {
-		  		console.log("found");
+		  		console.log("File already exists. Overwriting...");
 		  		// for now, even if we do find the clip we're going to overwrite
 		  		// I'll figure out how to ask the user about it later
 		  		var newFile = fs.createWriteStream(serverPath);
-	            file.pipe(newFile);  	
+
+		  		newFile.on("error", writeStreamErr);
+
+		  		// pipe file read stream into disk write stream
+	            file.pipe(newFile);
 
 	            clip.mimeType = mimetype;
-	            clip.dateCreated = new Date();     
+	            clip.dateCreated = new Date();
 		  	} else {
-		  		console.log("not found");
+		  		console.log("File does not exist. Creating...");
 		  		// clip not found, so go ahead and make it
 		  		var newFile = fs.createWriteStream(serverPath);
+
+		  		newFile.on("error", writeStreamErr);
 
 	            // pipe file read stream into disk write stream
 	            file.pipe(newFile);
