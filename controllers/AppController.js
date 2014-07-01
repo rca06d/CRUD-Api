@@ -2,6 +2,41 @@ var fs = require("fs");
 var models = require("../models/models.js");
 var AudioClip = models.AudioClip;
 
+function getMimeType(filename) {
+	if(!filename) return false;
+	var extension = filename.split(".").pop();
+
+	switch (extension) {
+    case "mp4":
+        return "video/mp4";
+    case "webm":
+        return "video/webm";
+    case "ogv":
+        return "video/ogg";
+    case "mov":
+        // TODO: figure out why this doesn't work as video/quicktime and DOES work as video/webm
+        return "video/webm";
+    case "flv":
+        return "video/flv";
+    case "wmv":
+        return "video/x-ms-wmv";
+    case "avi":
+        return "video/x-msvideo";
+    case "m3u8":
+        return "video/x-mpegURL";
+    case "ts":
+        return "video/MP2T";
+    case "3gp":
+        return "video/3gpp";
+    case undefined:
+        console.log("Video source is undefined!");
+        return false;
+    default:
+        console.log("Video source could not be associated with a mime type"); 
+        return false;
+    }
+}
+
 exports.getClipById = function (request, response) {
 
 	var id = request.params.id;
@@ -51,10 +86,12 @@ exports.uploadClip = function (request, response) {
 
 	request.busboy.on("file", function(fieldname, file, filename, encoding, mimetype) {
 
-        console.log("File received: " + filename + ", Encoding: " + encoding);
+        console.log("File received: " + filename + ", Type: " + mimetype);
+
+        if (mimetype == "application/octet-stream") mimetype = getMimeType(filename);
 
         var serverPath = "./public/uploads/" + filename;
-        var clientPath = "http://localhost:3001/uploads/" + filename;
+        var clientPath = "//localhost:3001/uploads/" + filename;
         // TODO: perhaps rename file before writing directly to disk
 
         // see if the clip is in mongo already
@@ -64,7 +101,10 @@ exports.uploadClip = function (request, response) {
 		  		// for now, even if we do find the clip we're going to overwrite
 		  		// I'll figure out how to ask the user about it later
 		  		var newFile = fs.createWriteStream(serverPath);
-	            file.pipe(newFile);  		       
+	            file.pipe(newFile);  	
+
+	            clip.mimeType = mimetype;
+	            clip.dateCreated = new Date();     
 		  	} else {
 		  		console.log("not found");
 		  		// clip not found, so go ahead and make it
@@ -76,11 +116,11 @@ exports.uploadClip = function (request, response) {
 	            // create new cooresponding mongoose object
 		        clip = new AudioClip({ 
 					name: filename,
+					mimeType: mimetype,
 					transcript: "",
 					dateCreated: new Date(),
 				    serverPath: serverPath,
-				    clientPath: clientPath,
-				    length: 10.5,
+				    clientPath: clientPath
 				}); 
 	            
 		  	} // end if
@@ -88,10 +128,12 @@ exports.uploadClip = function (request, response) {
 		  	// save it
             clip.save(function (err, clip) {
 				if (err) {
+					console.log("Something went wrong saving file: " + filename + ". Err: " + err);
 					response.writeHead(200);
 					response.write("Something went wrong saving file: " + filename + ". Err: " + err);
 					response.end();
 				} else {  	
+					console.log("Success: " + clip);
 					response.writeHead(200);
 					response.write(JSON.stringify(clip));
 					response.end();
