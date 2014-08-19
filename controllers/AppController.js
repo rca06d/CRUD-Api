@@ -15,7 +15,7 @@ function getMimeType(filename) {
         return "video/ogg";
     case "mov":
         // TODO: figure out why this doesn't work as video/quicktime and DOES work as video/webm
-        return "video/webm";
+        return "video/quicktime";
     case "flv":
         return "video/flv";
     case "wmv":
